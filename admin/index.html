@@ -20,6 +20,8 @@
   h1 { font-family:"PSL",system-ui; font-size:44px; letter-spacing:3px; margin:0; line-height:1;
        color:#fff; text-shadow:0 0 12px var(--cyan), 0 0 2px #fff; }
   header span { font-family:"PSL",system-ui; font-size:24px; color:var(--cyan); }
+  .who { margin-left:auto; display:flex; gap:10px; align-items:center; font-size:14px; color:var(--muted); }
+  .who button { padding:6px 12px; font-size:13px; }
   .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px;
            box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 10px 40px rgba(0,0,0,.35); margin-bottom:18px; }
   .panel h2 { margin:0 0 14px; font-size:16px; color:var(--cyan); font-weight:600; letter-spacing:.5px; }
@@ -59,7 +61,7 @@
 </head>
 <body>
 <div class="wrap">
-  <header><h1>FRIDAY</h1><span>ระบบเจนโค้ดล็อกอิน</span></header>
+  <header><h1>FRIDAY</h1><span>ระบบเจนโค้ดล็อกอิน</span><div class="who"><span id="me"></span><button id="logout">ออกจากระบบ</button></div></header>
 
   <section class="panel">
     <h2>สร้างโค้ดใหม่</h2>
@@ -96,6 +98,9 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
+// ถ้า session หมด ให้กลับไปหน้าล็อกอิน
+const _fetch = window.fetch.bind(window);
+window.fetch = async (...a) => { const r = await _fetch(...a); if (r.status === 401) location.href = '/admin/login'; return r; };
 const UNIT = { day:'วัน', hours:'ชม.', minutes:'นาที' };
 let all = [];
 
@@ -163,6 +168,8 @@ $('tbody').onclick = async (e) => {
   await fetch(url, { method: a==='del' ? 'DELETE' : 'POST' });
   load();
 };
+$('logout').onclick = async () => { await fetch('/admin/api/logout', { method:'POST' }); location.href = '/admin/login'; };
+fetch('/admin/api/me').then(r => r.json()).then(d => { $('me').textContent = '👤 ' + d.username; }).catch(()=>{});
 load();
 setInterval(render, 30000);
 </script>

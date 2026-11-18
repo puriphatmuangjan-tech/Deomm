@@ -5,7 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.PORT ? '0.0.0.0' : '127.0.0.1'; // บน Render ต้องรับจากภายนอก
+const USERS_FILE = path.join(__dirname, 'users.json');
+const SESSION_HOURS = 12;
 const ROOT = __dirname;
 const GAME_DIR = path.join(ROOT, 'friday2022-3a53c.web.app');
 const DATA_DIR = path.join(ROOT, 'us-central1-jarvis-24webservice.cloudfunctions.net', 'game', 'api');
@@ -80,6 +83,38 @@ function logMissing(urlPath) {
   } catch {}
 }
 
+// ---------- ผู้ใช้หน้า admin ----------
+function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  return { salt, hash: crypto.scryptSync(String(password), salt, 64).toString('hex') };
+}
+function loadUsers() {
+  let users = {};
+  try { users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch {}
+  if (!Object.keys(users).length) {
+    // บัญชีเริ่มต้น (เปลี่ยนได้ด้วย Environment ADMIN_USER / ADMIN_PASSWORD)
+    const u = process.env.ADMIN_USER || 'admin';
+    users[u] = { role: 'admin', ...hashPassword(process.env.ADMIN_PASSWORD || '112233') };
+    try { fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); } catch {}
+  }
+  return users;
+}
+function checkLogin(username, password) {
+  const u = loadUsers()[String(username || '').trim()];
+  if (!u) return null;
+  const h = crypto.scryptSync(String(password || ''), u.salt, 64);
+  return crypto.timingSafeEqual(h, Buffer.from(u.hash, 'hex')) ? u : null;
+}
+const sessions = new Map(); // token -> { username, role, exp }
+function getSession(req) {
+  const m = (req.headers.cookie || '').match(/(?:^|;\s*)sid=([a-f0-9]+)/);
+  const s = m && sessions.get(m[1]);
+  if (!s) return null;
+  if (s.exp < Date.now()) { sessions.delete(m[1]); return null; }
+  return { token: m[1], ...s };
+}
+const loginFails = new Map(); // ip -> { n, until }
+function clientIp(req) { return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim(); }
+
 // ---------- routes ----------
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -92,7 +127,8 @@ const server = http.createServer(async (req, res) => {
     return fs.readFile(path.join(DATA_DIR, name), 'utf8', (e, d) => {
       if (e) return send(res, 500, { error: e.message });
       // ให้รูปโหลดผ่าน server นี้แทน storage.googleapis.com
-      send(res, 200, d.split('https://storage.googleapis.com/').join(`http://${req.headers.host}/storage/`));
+      const proto = req.headers['x-forwarded-proto'] || 'http';
+      send(res, 200, d.split('https://storage.googleapis.com/').join(`${proto}://${req.headers.host}/storage/`));
     });
   }
 
@@ -147,6 +183,43 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { status: true });
   }
 
+  // --- ล็อกอินหน้า admin ---
+  if (p === '/admin/login' && req.method === 'GET') return serveStatic(res, ADMIN_DIR, '/login.html');
+  if (p === '/admin/api/login' && req.method === 'POST') {
+    const ip = clientIp(req), f = loginFails.get(ip);
+    if (f && f.until > Date.now()) return send(res, 429, { error: 'ลองผิดหลายครั้ง กรุณารอ 1 นาที' });
+    let body = {};
+    try { body = JSON.parse(await readBody(req) || '{}'); } catch {}
+    const u = checkLogin(body.username, body.password);
+    if (!u) {
+      const n = (f ? f.n : 0) + 1;
+      loginFails.set(ip, { n: n >= 5 ? 0 : n, until: n >= 5 ? Date.now() + 60000 : 0 });
+      return send(res, 401, { error: 'Username หรือ Password ไม่ถูกต้อง' });
+    }
+    loginFails.delete(ip);
+    const token = crypto.randomBytes(32).toString('hex');
+    const username = String(body.username).trim();
+    sessions.set(token, { username, role: u.role, exp: Date.now() + SESSION_HOURS * 3600e3 });
+    const secure = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_HOURS * 3600}${secure}`);
+    return send(res, 200, { ok: true, username, role: u.role });
+  }
+  if (p === '/admin/api/logout' && req.method === 'POST') {
+    const ses = getSession(req);
+    if (ses) sessions.delete(ses.token);
+    res.setHeader('Set-Cookie', 'sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
+    return send(res, 200, { ok: true });
+  }
+  if (p === '/admin' || p.startsWith('/admin/')) {
+    const ses = getSession(req);
+    if (!ses || ses.role !== 'admin') {
+      if (p.startsWith('/admin/api/')) return send(res, 401, { error: 'กรุณาล็อกอิน' });
+      res.writeHead(302, { Location: '/admin/login' });
+      return res.end();
+    }
+    if (p === '/admin/api/me') return send(res, 200, { username: ses.username, role: ses.role });
+  }
+
   // --- Admin API ---
   if (p === '/admin/api/codes' && req.method === 'GET') {
     const codes = loadCodes();
@@ -187,7 +260,7 @@ const server = http.createServer(async (req, res) => {
   return serveStatic(res, GAME_DIR, p);
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, HOST, () => {
   console.log(`เกม:        http://localhost:${PORT}/`);
   console.log(`หน้าเจนโค้ด: http://localhost:${PORT}/admin`);
 });

@@ -426,7 +426,7 @@ System.register("chunks:///_virtual/manager.ts", ["./rollupPluginModLoBabelHelpe
             }), k(((te = function(e) {
                 function t() {
                     for (var t, n = arguments.length, a = new Array(n), o = 0; o < n; o++) a[o] = arguments[o];
-                    return (t = e.call.apply(e, [this].concat(a)) || this).ul = "http://localhost:3000/game/api/", r(t, "pagePos", B, i(t)), r(t, "page_CompanyPrefab", F, i(t)), r(t, "page_GameMenuPrefab", X, i(t)), r(t, "page_GameConsolePrefab", J, i(t)), r(t, "page_NoticePrefab", j, i(t)), r(t, "companyPrefab", Y, i(t)), r(t, "gamePrefab", W, i(t)), r(t, "page_Login", Z, i(t)), r(t, "inputCode", K, i(t)), r(t, "btn_Login", Q, i(t)), r(t, "bg", V, i(t)), r(t, "bg_login", $, i(t)), r(t, "bg_play", ee, i(t)), t
+                    return (t = e.call.apply(e, [this].concat(a)) || this).ul = "/game/api/", r(t, "pagePos", B, i(t)), r(t, "page_CompanyPrefab", F, i(t)), r(t, "page_GameMenuPrefab", X, i(t)), r(t, "page_GameConsolePrefab", J, i(t)), r(t, "page_NoticePrefab", j, i(t)), r(t, "companyPrefab", Y, i(t)), r(t, "gamePrefab", W, i(t)), r(t, "page_Login", Z, i(t)), r(t, "inputCode", K, i(t)), r(t, "btn_Login", Q, i(t)), r(t, "bg", V, i(t)), r(t, "bg_login", $, i(t)), r(t, "bg_play", ee, i(t)), t
                 }
                 n(t, e);
                 var s = t.prototype;

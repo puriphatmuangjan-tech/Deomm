@@ -1,4 +1,15 @@
 {
+  "545864": {
+    "numberTime": 1,
+    "typeTime": "day",
+    "note": "",
+    "createdAt": "2026-11-18T13:34:12.967Z",
+    "activatedAt": "2026-11-18T13:34:17.696Z",
+    "expire": "2026-11-19T13:34:17.696Z",
+    "disabled": false,
+    "lastLogin": "2026-11-18T13:34:17.696Z",
+    "loginCount": 1
+  },
   "642214": {
     "numberTime": 1,
     "typeTime": "day",
