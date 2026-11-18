@@ -93,7 +93,7 @@ System.register("chunks:///_virtual/contactLine.ts", ["./rollupPluginModLoBabelH
                 return r.start = function() {
                     s.isActiveContactline || (this.contact_line.active = !1)
                 }, r.OnClickLandingToLine = function() {
-                    window.location.replace("https://lin.ee/GYSOVcy")
+                    void 0 /* ลบลิงก์ LINE ออกแล้ว */
                 }, r.OnClickCloseButtonLine = function() {
                     s.isActiveContactline = !1, this.contact_line.active = !1
                 }, n
@@ -698,7 +698,7 @@ System.register("chunks:///_virtual/manager.ts", ["./rollupPluginModLoBabelHelpe
                         e.getComponent(x).progress = t
                     })), t.timeRef = t.timeDef, T.static_audio_boot.play()
                 }, s.onToggleAudio = function() {}, t
-            }(b)).manager = void 0, te.gameList = [], te.companyList = [], te.page_Loading = null, te.page_Company = null, te.page_GameMenu = null, te.page_GameConsole = null, te.page_Notice = null, te.timeRef = null, te.timeDef = null, te._pos = null, te._btn_audio = null, te._btn_audio_on = null, te._btn_audio_off = null, te.id = null, te.code = null, te.expTime = null, te.status = null, te.logTimeExp = null, te.initTime = null, te.isActiveContactline = !0, B = t((q = te).prototype, "pagePos", [M], {
+            }(b)).manager = void 0, te.gameList = [], te.companyList = [], te.page_Loading = null, te.page_Company = null, te.page_GameMenu = null, te.page_GameConsole = null, te.page_Notice = null, te.timeRef = null, te.timeDef = null, te._pos = null, te._btn_audio = null, te._btn_audio_on = null, te._btn_audio_off = null, te.id = null, te.code = null, te.expTime = null, te.status = null, te.logTimeExp = null, te.initTime = null, te.isActiveContactline = !1, B = t((q = te).prototype, "pagePos", [M], {
                 configurable: !0,
                 enumerable: !0,
                 writable: !0,
