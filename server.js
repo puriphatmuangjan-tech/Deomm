@@ -264,3 +264,19 @@ server.listen(PORT, HOST, () => {
   console.log(`เกม:        http://localhost:${PORT}/`);
   console.log(`หน้าเจนโค้ด: http://localhost:${PORT}/admin`);
 });
+// ---------- กัน Server Sleep ----------
+// ping ตัวเองทุก 14 นาที (Render หลับเมื่อไม่มีคนใช้ 15 นาที)
+const KEEP_ALIVE_URL = process.env.RENDER_EXTERNAL_URL || process.env.KEEP_ALIVE_URL;
+const KEEP_ALIVE_MINUTES = 14;
+
+if (KEEP_ALIVE_URL) {
+  setInterval(async () => {
+    try {
+      const r = await fetch(KEEP_ALIVE_URL + '/health');
+      console.log(`[keep-alive] ${new Date().toISOString()} → ${r.status}`);
+    } catch (e) {
+      console.log('[keep-alive] ping ไม่สำเร็จ:', e.message);
+    }
+  }, KEEP_ALIVE_MINUTES * 60 * 1000);
+  console.log(`[keep-alive] เปิดใช้งาน ping ${KEEP_ALIVE_URL} ทุก ${KEEP_ALIVE_MINUTES} นาที`);
+}
