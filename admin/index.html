@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FRIDAY · เจนโค้ดล็อกอิน</title>
+<style>
+  @font-face { font-family: "PSL"; src: url("/assets/resources/native/0e/0e888ccc-a2f1-4724-b1e1-9d4e8c645d10/psl147.ttf") format("truetype"); }
+  :root {
+    --bg1:#0d2a5c; --bg2:#3b1f6e; --panel:rgba(10,20,50,.72); --line:rgba(140,220,255,.35);
+    --cyan:#6fe7ff; --pink:#ff6fb5; --text:#e9f6ff; --muted:#93b3d6; --ok:#5dffb0; --bad:#ff6b8a; --warn:#ffd36b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; color:var(--text);
+    font: 15px/1.5 system-ui, "Segoe UI", Tahoma, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #1fa3c9 0%, transparent 60%),
+                linear-gradient(160deg, var(--bg1), var(--bg2)); background-attachment: fixed; }
+  .wrap { max-width:1040px; margin:0 auto; padding:28px 18px 60px; }
+  header { display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+  h1 { font-family:"PSL",system-ui; font-size:44px; letter-spacing:3px; margin:0; line-height:1;
+       color:#fff; text-shadow:0 0 12px var(--cyan), 0 0 2px #fff; }
+  header span { font-family:"PSL",system-ui; font-size:24px; color:var(--cyan); }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px;
+           box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 10px 40px rgba(0,0,0,.35); margin-bottom:18px; }
+  .panel h2 { margin:0 0 14px; font-size:16px; color:var(--cyan); font-weight:600; letter-spacing:.5px; }
+  .grid { display:grid; grid-template-columns: 140px minmax(220px,1.2fr) minmax(180px,1fr) auto; gap:12px; align-items:end; }
+  label { display:block; font-size:13px; color:var(--muted); margin-bottom:4px; }
+  input, select { width:100%; padding:9px 11px; border-radius:6px; border:1px solid var(--line);
+                  background:rgba(0,0,0,.35); color:var(--text); font:inherit; }
+  input:focus, select:focus { outline:none; border-color:var(--cyan); box-shadow:0 0 0 2px rgba(111,231,255,.25); }
+  .dur { display:flex; gap:6px; } .dur input { flex:1; min-width:70px; } .dur select { width:110px; }
+  button { font:inherit; cursor:pointer; border-radius:6px; border:1px solid var(--line); color:var(--text);
+           background:rgba(255,255,255,.06); padding:8px 12px; }
+  button:hover { border-color:var(--cyan); }
+  .primary { background:linear-gradient(180deg,#3a1a55,#1b0f33); border:1px solid #c88bff; padding:10px 16px;
+             font-weight:600; box-shadow:0 0 12px rgba(200,139,255,.35); }
+  .primary:hover { box-shadow:0 0 18px rgba(200,139,255,.6); }
+  .new { margin-top:16px; display:none; }
+  .new.show { display:block; }
+  .new textarea { width:100%; min-height:90px; font:16px/1.6 ui-monospace,Consolas,monospace; letter-spacing:1px;
+                  background:rgba(0,0,0,.4); color:var(--ok); border:1px solid var(--line); border-radius:6px; padding:10px; resize:vertical; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .toolbar input { max-width:240px; } .toolbar select { max-width:160px; }
+  .stats { margin-left:auto; color:var(--muted); font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 8px; border-bottom:1px solid rgba(140,220,255,.12); vertical-align:middle; }
+  th { color:var(--muted); font-weight:500; font-size:12px; text-transform:uppercase; letter-spacing:.6px; }
+  td.code { font-family:ui-monospace,Consolas,monospace; font-size:15px; letter-spacing:1px; white-space:nowrap; }
+  .tag { display:inline-block; padding:1px 8px; border-radius:99px; font-size:12px; border:1px solid currentColor; white-space:nowrap; }
+  .t-new{color:var(--cyan)} .t-active{color:var(--ok)} .t-exp{color:var(--muted)} .t-off{color:var(--bad)}
+  td.act { white-space:nowrap; text-align:right; } td.act button { padding:4px 8px; font-size:12px; }
+  .muted { color:var(--muted); } .empty { text-align:center; color:var(--muted); padding:28px; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#10223f; border:1px solid var(--cyan);
+           padding:8px 14px; border-radius:6px; opacity:0; transition:opacity .2s; pointer-events:none; }
+  .toast.show { opacity:1; }
+  @media (max-width:700px){ .hide-sm{display:none} .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>FRIDAY</h1><span>ระบบเจนโค้ดล็อกอิน</span></header>
+
+  <section class="panel">
+    <h2>สร้างโค้ดใหม่</h2>
+    <div class="grid">
+      <div><label for="count">จำนวนโค้ด</label><input id="count" type="number" min="1" max="500" value="1"></div>
+      <div><label>อายุการใช้งาน</label>
+        <div class="dur"><input id="numberTime" type="number" min="1" value="1">
+          <select id="typeTime"><option value="day">วัน</option><option value="hours">ชั่วโมง</option><option value="minutes">นาที</option></select></div></div>
+      <div><label for="note">หมายเหตุ</label><input id="note" placeholder="เช่น ทดสอบ"></div>
+      <div><button class="primary" id="gen">เจนโค้ด</button></div>
+    </div>
+    <p class="muted" style="margin:10px 0 0;font-size:13px">โค้ดเป็นตัวเลข 6 หลัก · อายุเริ่มนับตอนล็อกอินครั้งแรก</p>
+    <div class="new" id="newBox">
+      <label>โค้ดที่สร้างล่าสุด</label>
+      <textarea id="newCodes" readonly></textarea>
+      <div class="row"><button id="copyNew">คัดลอกทั้งหมด</button><span class="muted" id="newInfo"></span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="toolbar">
+      <input id="q" placeholder="ค้นหาโค้ด / หมายเหตุ">
+      <select id="filter"><option value="">ทุกสถานะ</option><option value="new">ยังไม่ใช้</option><option value="active">ใช้งานอยู่</option><option value="exp">หมดอายุ</option><option value="off">ปิดใช้งาน</option></select>
+      <button id="reload">รีเฟรช</button>
+      <span class="stats" id="stats"></span>
+    </div>
+    <table>
+      <thead><tr><th>โค้ด</th><th>อายุ</th><th>สถานะ</th><th class="hide-sm">หมดอายุ</th><th class="hide-sm">ล็อกอิน</th><th class="hide-sm">หมายเหตุ</th><th></th></tr></thead>
+      <tbody id="tbody"><tr><td colspan="7" class="empty">กำลังโหลด…</td></tr></tbody>
+    </table>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const UNIT = { day:'วัน', hours:'ชม.', minutes:'นาที' };
+let all = [];
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1600); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmt(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
+function state(c){
+  if (c.disabled) return 'off';
+  if (!c.activatedAt) return 'new';
+  return new Date(c.expire) <= new Date() ? 'exp' : 'active';
+}
+const LABEL = { new:['ยังไม่ใช้','t-new'], active:['ใช้งานอยู่','t-active'], exp:['หมดอายุ','t-exp'], off:['ปิดใช้งาน','t-off'] };
+async function copy(text){ try { await navigator.clipboard.writeText(text); toast('คัดลอกแล้ว'); } catch { toast('คัดลอกไม่ได้'); } }
+
+async function load(){
+  try { all = await (await fetch('/admin/api/codes')).json(); } catch { all = []; toast('ติดต่อ server ไม่ได้'); }
+  render();
+}
+function render(){
+  const q = $('q').value.trim().toUpperCase(), f = $('filter').value;
+  const counts = { new:0, active:0, exp:0, off:0 };
+  all.forEach(c => counts[state(c)]++);
+  $('stats').textContent = `ทั้งหมด ${all.length} · ใช้งานอยู่ ${counts.active} · ยังไม่ใช้ ${counts.new} · หมดอายุ ${counts.exp}`;
+  const rows = all.filter(c => (!f || state(c)===f) && (!q || c.code.includes(q) || (c.note||'').toUpperCase().includes(q)));
+  if (!rows.length) { $('tbody').innerHTML = `<tr><td colspan="7" class="empty">ไม่มีโค้ด</td></tr>`; return; }
+  $('tbody').innerHTML = rows.map(c => {
+    const s = state(c), [lbl, cls] = LABEL[s];
+    return `<tr>
+      <td class="code">${esc(c.code)}</td>
+      <td>${c.numberTime} ${UNIT[c.typeTime]||c.typeTime}</td>
+      <td><span class="tag ${cls}">${lbl}</span></td>
+      <td class="hide-sm muted">${fmt(c.expire)}</td>
+      <td class="hide-sm muted">${c.loginCount||0} ครั้ง</td>
+      <td class="hide-sm muted">${esc(c.note)}</td>
+      <td class="act">
+        <button data-a="copy" data-c="${esc(c.code)}">คัดลอก</button>
+        <button data-a="toggle" data-c="${esc(c.code)}">${c.disabled?'เปิด':'ปิด'}</button>
+        <button data-a="del" data-c="${esc(c.code)}">ลบ</button>
+      </td></tr>`;
+  }).join('');
+}
+
+$('gen').onclick = async () => {
+  const body = { count:$('count').value, numberTime:$('numberTime').value, typeTime:$('typeTime').value,
+                 note:$('note').value };
+  $('gen').disabled = true;
+  try {
+    const r = await (await fetch('/admin/api/codes', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })).json();
+    $('newCodes').value = r.created.join('\n');
+    $('newInfo').textContent = `${r.created.length} โค้ด · อายุ ${body.numberTime} ${UNIT[body.typeTime]}`;
+    $('newBox').classList.add('show');
+    await load();
+  } catch { toast('สร้างโค้ดไม่สำเร็จ'); }
+  $('gen').disabled = false;
+};
+$('copyNew').onclick = () => copy($('newCodes').value);
+$('reload').onclick = load;
+$('q').oninput = render; $('filter').onchange = render;
+$('tbody').onclick = async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  const code = b.dataset.c, a = b.dataset.a;
+  if (a === 'copy') return copy(code);
+  if (a === 'del' && !confirm(`ลบโค้ด ${code}?`)) return;
+  const url = `/admin/api/codes/${encodeURIComponent(code)}` + (a==='toggle' ? '/toggle' : '');
+  await fetch(url, { method: a==='del' ? 'DELETE' : 'POST' });
+  load();
+};
+load();
+setInterval(render, 30000);
+</script>
+</body>
+</html>
